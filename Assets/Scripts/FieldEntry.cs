@@ -13,4 +13,9 @@ public class FieldEntry : MonoBehaviour
     {
         gameManager.SelectColumn(columIndex);
     }
+
+    private void OnMouseOver()
+    {
+        gameManager.OnHoverColumn(columIndex);
+    }
 }

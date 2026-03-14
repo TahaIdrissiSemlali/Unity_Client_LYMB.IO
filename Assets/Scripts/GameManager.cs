@@ -3,18 +3,25 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private static readonly Vector3 CoinRotation = new Vector3(90, 0, -90);
+    private static readonly Vector3 CoinRotation = new(90, 0, -90);
     private const int BoardColumnNumbers = 8;
     private const int BoardRowNumbers = 5;
     private const int Player1Id = 1;
     private const int Player2Id = 2;
 
-    [Header("Players")] 
+    [Header("Players Coins")] 
     [SerializeField] 
     private GameObject player1;
     
     [SerializeField] 
     private GameObject player2;
+    
+    [Header("Players Coins Preview")]
+    [SerializeField]
+    private GameObject player1Preview;
+    
+    [SerializeField]
+    private GameObject player2Preview;
     
     [Header("Spawn Positions")]
     [SerializeField]
@@ -23,15 +30,48 @@ public class GameManager : MonoBehaviour
     private bool player1Turn = true;
 
     private int[,] board;
+    
+    private GameObject fallingCoin;
 
     private void Start()
     {
         board = new int[BoardColumnNumbers, BoardRowNumbers];
+        
+        player1Preview.SetActive(false);
+        player2Preview.SetActive(false);
+    }
+    
+    public void OnHoverColumn(int columnIndex)
+    {
+        if (IsColumnNotFull(columnIndex) && IsCoinStationary())
+        {
+            var previewToActivate = player1Turn ? player1Preview : player2Preview;
+            ActivatePreview(previewToActivate, columnIndex);
+        }
     }
 
-    public void SelectColumn(int index)
+    private bool IsColumnNotFull(int columnIndex)
     {
-        TakeTurn(index);
+        return board[columnIndex, BoardRowNumbers - 1] == 0;
+    }
+
+    private bool IsCoinStationary()
+    {
+        return fallingCoin == null || fallingCoin.GetComponent<Rigidbody>().linearVelocity == Vector3.zero;
+    }
+
+    private void ActivatePreview(GameObject preview, int columnIndex)
+    {
+        preview.SetActive(true);
+        preview.transform.position = spawnPositions[columnIndex].transform.position;
+    }
+    
+    public void SelectColumn(int columnIndex)
+    {
+        if (IsCoinStationary())
+        {
+            TakeTurn(columnIndex);
+        }    
     }
 
     private void TakeTurn(int columnIndex)
@@ -42,6 +82,9 @@ public class GameManager : MonoBehaviour
         // Case column not full
         if (TryPlaceCoin(columnIndex))
         {
+            player1Preview.SetActive(false);
+            player2Preview.SetActive(false);
+            
             SpawnCoin(currentPlayer, spawnPositions[columnIndex].transform.position, rotation);
 
             player1Turn = !player1Turn;
@@ -50,8 +93,9 @@ public class GameManager : MonoBehaviour
 
     private void SpawnCoin(GameObject player, Vector3 position, Vector3 rotation)
     {
-        var coin = Instantiate(player, position, Quaternion.identity);
-        coin.transform.Rotate(rotation);
+        fallingCoin = Instantiate(player, position, Quaternion.identity);
+        fallingCoin.GetComponent<Rigidbody>().linearVelocity = new Vector3(0, 0.1f, 0);
+        fallingCoin.transform.Rotate(rotation);
     }
 
     private bool TryPlaceCoin(int columnIndex)
