@@ -8,9 +8,20 @@ public class GameManager : MonoBehaviour
     
     [SerializeField] 
     private GameObject player2;
+    
+    [Header("Spawn Positions")]
+    [SerializeField]
+    private GameObject[] spawnPositions;
 
     public void SelectColumn(int index)
     {
         Debug.Log("Selected column: " + index);
+        TakeTurn(index);
+    }
+
+    private void TakeTurn(int columnIndex)
+    {
+        var coin = Instantiate(player1, spawnPositions[columnIndex].transform.position, Quaternion.identity);
+        coin.transform.Rotate(new Vector3(90, 0, -90));
     }
 }
