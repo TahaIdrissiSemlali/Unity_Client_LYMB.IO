@@ -55,6 +55,9 @@
        
        private void OnStartClicked()
        {
+           GameData.Player1Name = player1Input.text;
+           GameData.Player2Name = player2Input.text;
+           
            backgroundMusicSource.Stop();
            SceneManager.LoadScene("GameScene");
        }

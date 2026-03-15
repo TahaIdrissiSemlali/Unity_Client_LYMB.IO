@@ -1,5 +1,7 @@
 using System;
 using DG.Tweening;
+using JetBrains.Annotations;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -12,7 +14,7 @@ public class GameManager : MonoBehaviour
     private const int Player1Id = 1;
     private const int Player2Id = 2;
 
-    private readonly Vector3 TargetPosition = new Vector3(13.8f, 1.9f, -22.19f);
+    private readonly Vector3 TargetPosition = new Vector3(13.8f, 1.9f, -24f);
     private readonly Vector3 TargetRotation = new Vector3(-3, -90, 0);
     
     private readonly Vector3 StartPosition = new Vector3(13.8f, 1.9f, -16f);
@@ -39,13 +41,20 @@ public class GameManager : MonoBehaviour
     [Header("Kamera-Settings")]
     public Camera mainCamera;
     
+    [Header("Players UI")]
+    [SerializeField]
+    public TextMeshProUGUI playerNameTurnText;
+    
     private bool isCameraMoving = false;
 
-    private bool player1Turn = true;
+    private bool isPlayer1Turn = true;
 
     private int[,] board;
 
     private GameObject fallingCoin;
+
+    private string player1Name;
+    private string player2Name;
 
     private void Start()
     {
@@ -55,6 +64,44 @@ public class GameManager : MonoBehaviour
         player2Preview.SetActive(false);
 
         SetCamera();
+        
+        player1Name = GameData.Player1Name;
+        player2Name = GameData.Player2Name;
+
+        SetPlayerTurnText(true);
+        SetPlayerNameColor(true);
+    }
+
+    private void SetPlayerTurnText(bool isPlayer1Turn)
+    {
+        playerNameTurnText.text = isPlayer1Turn ? $"Player {player1Name} turn" : $"Player {player2Name} turn";
+    }
+
+    private void SetPlayerNameColor(bool isPlayer1Turn)
+    {
+        if (playerNameTurnText == null) return;
+        
+        Color targetColor = isPlayer1Turn ? Color.red : Color.blue;
+        playerNameTurnText.DOColor(targetColor, 0.5f);
+    }
+
+    private void SetPlayerTurnNameAnimation()
+    {
+        if (playerNameTurnText == null) return;
+        
+        playerNameTurnText.transform
+            .DORotate(new Vector3(0, 0, 360), 1f, RotateMode.FastBeyond360)
+            .SetEase(Ease.OutBounce);
+        
+        playerNameTurnText.transform
+            .DOScale(Vector3.one * 1.2f, 0.5f)
+            .SetLoops(2, LoopType.Yoyo)       
+            .SetEase(Ease.InOutQuad);
+
+        
+        playerNameTurnText.DOFade(0, 0.3f)
+            .SetLoops(2, LoopType.Yoyo)
+            .SetEase(Ease.InOutSine);
     }
     
     private void SetCamera()
@@ -77,7 +124,7 @@ public class GameManager : MonoBehaviour
         
         if (IsColumnNotFull(columnIndex) && IsCoinStationary())
         {
-            var previewToActivate = player1Turn ? player1Preview : player2Preview;
+            var previewToActivate = isPlayer1Turn ? player1Preview : player2Preview;
             ActivatePreview(previewToActivate, columnIndex);
         }
     }
@@ -110,7 +157,7 @@ public class GameManager : MonoBehaviour
 
     private void TakeTurn(int columnIndex)
     {
-        GameObject currentPlayer = player1Turn ? player1 : player2;
+        GameObject currentPlayer = isPlayer1Turn ? player1 : player2;
         Vector3 rotation = CoinRotation;
 
         // Case column not full
@@ -121,7 +168,10 @@ public class GameManager : MonoBehaviour
 
             SpawnCoin(currentPlayer, spawnPositions[columnIndex].transform.position, rotation);
 
-            player1Turn = !player1Turn;
+            isPlayer1Turn = !isPlayer1Turn;
+            SetPlayerTurnText(isPlayer1Turn);
+            SetPlayerNameColor(isPlayer1Turn);
+            SetPlayerTurnNameAnimation();
         }
 
         if (IsDraw())
@@ -136,7 +186,7 @@ public class GameManager : MonoBehaviour
         fallingCoin.GetComponent<Rigidbody>().linearVelocity = new Vector3(0, 0.1f, 0);
         fallingCoin.transform.Rotate(rotation);
 
-        int playerId = player1Turn ? Player1Id : Player2Id;
+        int playerId = isPlayer1Turn ? Player1Id : Player2Id;
 
         if (IsWin(playerId))
         {
@@ -150,7 +200,7 @@ public class GameManager : MonoBehaviour
         {
             if (board[columnIndex, row] == 0)
             {
-                int currentPlayerId = player1Turn ? Player1Id : Player2Id;
+                int currentPlayerId = isPlayer1Turn ? Player1Id : Player2Id;
                 PlaceCoin(columnIndex, row, currentPlayerId);
 
                 Debug.Log($"Player {currentPlayerId} has placed a coin in column {columnIndex} and row {row}");
