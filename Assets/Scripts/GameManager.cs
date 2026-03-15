@@ -9,38 +9,33 @@ public class GameManager : MonoBehaviour
     private const int Player1Id = 1;
     private const int Player2Id = 2;
 
-    [Header("Players Coins")] 
-    [SerializeField] 
+    [Header("Players Coins")] [SerializeField]
     private GameObject player1;
-    
-    [SerializeField] 
-    private GameObject player2;
-    
-    [Header("Players Coins Preview")]
-    [SerializeField]
+
+    [SerializeField] private GameObject player2;
+
+    [Header("Players Coins Preview")] [SerializeField]
     private GameObject player1Preview;
-    
-    [SerializeField]
-    private GameObject player2Preview;
-    
-    [Header("Spawn Positions")]
-    [SerializeField]
+
+    [SerializeField] private GameObject player2Preview;
+
+    [Header("Spawn Positions")] [SerializeField]
     private GameObject[] spawnPositions;
-    
+
     private bool player1Turn = true;
 
     private int[,] board;
-    
+
     private GameObject fallingCoin;
 
     private void Start()
     {
         board = new int[BoardColumnNumbers, BoardRowNumbers];
-        
+
         player1Preview.SetActive(false);
         player2Preview.SetActive(false);
     }
-    
+
     public void OnHoverColumn(int columnIndex)
     {
         if (IsColumnNotFull(columnIndex) && IsCoinStationary())
@@ -65,13 +60,13 @@ public class GameManager : MonoBehaviour
         preview.SetActive(true);
         preview.transform.position = spawnPositions[columnIndex].transform.position;
     }
-    
+
     public void SelectColumn(int columnIndex)
     {
         if (IsCoinStationary())
         {
             TakeTurn(columnIndex);
-        }    
+        }
     }
 
     private void TakeTurn(int columnIndex)
@@ -84,10 +79,15 @@ public class GameManager : MonoBehaviour
         {
             player1Preview.SetActive(false);
             player2Preview.SetActive(false);
-            
+
             SpawnCoin(currentPlayer, spawnPositions[columnIndex].transform.position, rotation);
 
             player1Turn = !player1Turn;
+        }
+
+        if (IsDraw())
+        {
+            Debug.Log("Draw!");
         }
     }
 
@@ -96,6 +96,13 @@ public class GameManager : MonoBehaviour
         fallingCoin = Instantiate(player, position, Quaternion.identity);
         fallingCoin.GetComponent<Rigidbody>().linearVelocity = new Vector3(0, 0.1f, 0);
         fallingCoin.transform.Rotate(rotation);
+
+        int playerId = player1Turn ? Player1Id : Player2Id;
+
+        if (IsWin(playerId))
+        {
+            Debug.Log($"{playerId} has won!");
+        }
     }
 
     private bool TryPlaceCoin(int columnIndex)
@@ -119,5 +126,74 @@ public class GameManager : MonoBehaviour
     private void PlaceCoin(int columnIndex, int row, int playerId)
     {
         board[columnIndex, row] = playerId;
+    }
+
+    private bool IsWin(int playerId)
+    {
+        // Horizontal
+        for (int i = 0; i < BoardColumnNumbers - 3; i++)
+        {
+            for (int j = 0; j < BoardRowNumbers; j++)
+            {
+                if (board[i, j] == playerId && board[i + 1, j] == playerId
+                                            && board[i + 2, j] == playerId && board[i + 3, j] == playerId)
+                {
+                    return true;
+                }
+            }
+        }
+
+        // Vertical
+        for (int i = 0; i < BoardColumnNumbers; i++)
+        {
+            for (int j = 0; j < BoardRowNumbers - 3; j++)
+            {
+                if (board[i, j] == playerId && board[i, j + 1] == playerId
+                                            && board[i, j + 2] == playerId && board[i, j + 3] == playerId)
+                {
+                    return true;
+                }
+            }
+        }
+
+        // i = j
+        for (int i = 0; i < BoardColumnNumbers - 3; i++)
+        {
+            for (int j = 0; j < BoardRowNumbers - 3; j++)
+            {
+                if (board[i, j] == playerId && board[i + 1, j + 1] == playerId
+                                            && board[i + 2, j + 2] == playerId && board[i + 3, j + 3] == playerId)
+                {
+                    return true;
+                }
+            }
+        }
+
+        // i = -j
+        for (int i = 0; i < BoardColumnNumbers - 3; i++)
+        {
+            for (int j = 0; j < BoardRowNumbers - 3; j++)
+            {
+                if (board[i, j + 3] == playerId && board[i + 1, j + 2] == playerId
+                                            && board[i + 2, j + 1] == playerId && board[i + 3, j] == playerId)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsDraw()
+    {
+        for (int i = 0; i < BoardColumnNumbers; i++)
+        {
+            if (board[i, BoardRowNumbers - 1] == 0)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
