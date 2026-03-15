@@ -256,7 +256,7 @@ public class GameManager : MonoBehaviour
 
         if (IsDraw())
         {
-            Debug.Log("Draw!");
+            SeTDrawText();
         }
     }
 
@@ -284,6 +284,7 @@ public class GameManager : MonoBehaviour
     private void SeTWinningPlayerText(int playerId)
     {
         winningPlayerText.gameObject.SetActive(true);
+        winningPlayerText.color = Color.green;
         
         if (playerId == Player1Id)
         {
@@ -291,7 +292,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            winningPlayerText.text = $"{player1Name} has lost!";
+            winningPlayerText.text = $"{player2Name} has won!";
         }
         
         winningTextCanvasGroup.alpha = 0; 
@@ -313,6 +314,31 @@ public class GameManager : MonoBehaviour
         gameStopped = true;
     }
 
+    private void SeTDrawText()
+    {
+        winningPlayerText.gameObject.SetActive(true);
+        winningPlayerText.color = Color.red;
+        winningPlayerText.text = $"Is a Draw";
+        
+        
+        winningTextCanvasGroup.alpha = 0; 
+        winningTextCanvasGroup.DOFade(1, 1f).SetEase(Ease.OutBounce);
+
+        winningPlayerText.transform.localScale = Vector3.zero; 
+        winningPlayerText.transform.DOScale(Vector3.one, 1f)
+            .SetEase(Ease.OutElastic)
+            .OnComplete(() =>
+            {
+                winningPlayerText.transform.DOScale(new Vector3(1.1f, 1.1f, 1f), 0.5f)
+                    .SetEase(Ease.InOutBounce)
+                    .SetLoops(-1, LoopType.Yoyo);
+            }); 
+        
+        retryButton.gameObject.SetActive(true);
+        
+        playerNameTurnText.gameObject.SetActive(false);
+        gameStopped = true;
+    }
     public void ResumeGame()
     {
         DOTween.Kill(winningPlayerText, true);
