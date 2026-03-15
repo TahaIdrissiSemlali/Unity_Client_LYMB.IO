@@ -9,15 +9,40 @@
        public TMP_InputField player1Input;
        public TMP_InputField player2Input;
        public Button startButton;
+       
+       [Header("Background Music")]
+       [SerializeField]
+       private AudioClip backgroundMusic;
+       
+       private AudioSource backgroundMusicSource;
 
        private void Start()
        {
-           startButton.onClick.AddListener(OnStartClicked);
-           
-           player1Input.onValueChanged.AddListener((value) => HandleStartConditions());
-           player2Input.onValueChanged.AddListener((value) => HandleStartConditions());
+           RegisterUIEventListeners();
+           InitializeBackgroundMusic();
        }
 
+       private void RegisterUIEventListeners()
+       {
+           startButton.onClick.AddListener(OnStartClicked);
+           player1Input.onValueChanged.AddListener((value) => UpdateStartButtonState());
+           player2Input.onValueChanged.AddListener((value) => UpdateStartButtonState());
+       }
+
+       private void InitializeBackgroundMusic()
+       {
+           backgroundMusicSource = gameObject.AddComponent<AudioSource>();
+           backgroundMusicSource.clip = backgroundMusic;
+           backgroundMusicSource.loop = true;
+           backgroundMusicSource.Play();
+       }
+
+       private void UpdateStartButtonState()
+       {
+           startButton.interactable = IsStartButtonInteractable();
+       }
+
+       
        private void HandleStartConditions()
        {
            startButton.interactable = IsStartButtonInteractable();
@@ -30,6 +55,7 @@
        
        private void OnStartClicked()
        {
+           backgroundMusicSource.Stop();
            SceneManager.LoadScene("GameScene");
        }
 

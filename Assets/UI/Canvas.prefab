@@ -173,7 +173,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 0
   m_fontSizeMax: 20
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -676,7 +676,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 0
   m_fontSizeMax: 20
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -1519,3 +1519,4 @@ MonoBehaviour:
   player1Input: {fileID: 5872953631425917360}
   player2Input: {fileID: 8782005302786672373}
   startButton: {fileID: 7345717314991511842}
+  backgroundMusic: {fileID: 8300000, guid: 3eb8db1751b10f445872a6ae33a8de52, type: 3}
