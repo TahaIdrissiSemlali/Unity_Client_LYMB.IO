@@ -515,9 +515,7 @@ MonoBehaviour:
   - {fileID: 886633843}
   - {fileID: 41986896}
   - {fileID: 1604528714}
-  mainCamera: {fileID: 0}
-  targetPosition: {x: 13.8, y: 1.9, z: -22.19}
-  targetRotation: {x: -3, y: -90, z: 0}
+  mainCamera: {fileID: 330585545}
 --- !u!4 &397321666
 Transform:
   m_ObjectHideFlags: 0

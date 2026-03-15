@@ -1,13 +1,22 @@
 using System;
+using DG.Tweening;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     private static readonly Vector3 CoinRotation = new(90, 0, -90);
+    
     private const int BoardColumnNumbers = 8;
     private const int BoardRowNumbers = 5;
+    
     private const int Player1Id = 1;
     private const int Player2Id = 2;
+
+    private readonly Vector3 TargetPosition = new Vector3(13.8f, 1.9f, -22.19f);
+    private readonly Vector3 TargetRotation = new Vector3(-3, -90, 0);
+    
+    private readonly Vector3 StartPosition = new Vector3(13.8f, 1.9f, -16f);
+    private readonly Vector3 StartRotation = new Vector3(-5.62f, -114.32f, 0);
 
     [Header("Players Coins")] 
     [SerializeField]
@@ -29,8 +38,8 @@ public class GameManager : MonoBehaviour
     
     [Header("Kamera-Settings")]
     public Camera mainCamera;
-    public Vector3 targetPosition = new Vector3(13.8f, 1.9f, -22.19f);
-    public Vector3 targetRotation = new Vector3(-3, -90, 0);
+    
+    private bool isCameraMoving = false;
 
     private bool player1Turn = true;
 
@@ -44,16 +53,28 @@ public class GameManager : MonoBehaviour
 
         player1Preview.SetActive(false);
         player2Preview.SetActive(false);
-    }
 
+        SetCamera();
+    }
+    
     private void SetCamera()
     {
-        mainCamera.transform.position = targetPosition;
-        mainCamera.transform.rotation = Quaternion.Euler(targetRotation);
+        isCameraMoving = true;
+        
+        mainCamera.transform.position = StartPosition;
+        mainCamera.transform.rotation = Quaternion.Euler(StartRotation);
+        
+        mainCamera.transform.DOMove(TargetPosition, 1f).SetEase(Ease.InOutQuad);
+        mainCamera.transform.DORotate(TargetRotation, 1f).SetEase(Ease.InOutQuad).OnComplete(() =>
+        {
+            isCameraMoving = false;
+        });
     }
 
     public void OnHoverColumn(int columnIndex)
     {
+        if (isCameraMoving) return;
+        
         if (IsColumnNotFull(columnIndex) && IsCoinStationary())
         {
             var previewToActivate = player1Turn ? player1Preview : player2Preview;
@@ -79,6 +100,8 @@ public class GameManager : MonoBehaviour
 
     public void SelectColumn(int columnIndex)
     {
+        if (isCameraMoving) return;
+        
         if (IsCoinStationary())
         {
             TakeTurn(columnIndex);
