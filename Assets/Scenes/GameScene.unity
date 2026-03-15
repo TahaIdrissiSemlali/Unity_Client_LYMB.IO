@@ -198,6 +198,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 3
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &141940911
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -802,6 +803,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 2
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &836576694
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1033,6 +1035,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 6
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &1308532207
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1203,6 +1206,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 4
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &1656675160
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1280,6 +1284,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 7
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &1666268691
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1494,6 +1499,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 5
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &1737830530
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1602,6 +1608,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 0
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &1802892796
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1867,6 +1874,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columIndex: 1
   gameManager: {fileID: 397321665}
+  dropSound: {fileID: 8300000, guid: 5b13d26a12f8b4545b7ea0290cc1b794, type: 3}
 --- !u!65 &2131098946
 BoxCollider:
   m_ObjectHideFlags: 0
