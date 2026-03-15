@@ -16,67 +16,62 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     private static readonly Vector3 CoinRotation = new(90, 0, -90);
-    
+
     private const int BoardColumnNumbers = 8;
     private const int BoardRowNumbers = 5;
-    
+
     private const int Player1Id = 1;
     private const int Player2Id = 2;
-    
+
     private readonly Vector3 TargetPosition = new Vector3(13.8f, 1.9f, -24f);
     private readonly Vector3 TargetRotation = new Vector3(-3, -90, 0);
-    
+
     private readonly Vector3 StartPosition = new Vector3(13.8f, 1.9f, -16f);
     private readonly Vector3 StartRotation = new Vector3(-5.62f, -114.32f, 0);
-    
-    [Header("Players Coins")] 
-    [SerializeField]
+
+    [Header("Players Coins")] [SerializeField]
     private GameObject player1;
-    
-    [SerializeField] 
-    private GameObject player2;
-    
-    [Header("Players Coins Preview")] 
-    [SerializeField]
+
+    [SerializeField] private GameObject player2;
+
+    [Header("Players Coins Preview")] [SerializeField]
     private GameObject player1Preview;
-    
-    [SerializeField] 
-    private GameObject player2Preview;
-    
-    [Header("Spawn Positions")] 
-    [SerializeField]
+
+    [SerializeField] private GameObject player2Preview;
+
+    [Header("Spawn Positions")] [SerializeField]
     private GameObject[] spawnPositions;
-    
-    [Header("Kamera-Settings")]
-    public Camera mainCamera;
-    
-    [Header("Players UI")]
-    [SerializeField]
+
+    [Header("Kamera-Settings")] public Camera mainCamera;
+
+    [Header("Players UI")] [SerializeField]
     public TextMeshProUGUI playerNameTurnText;
-    
-    [SerializeField]
-    public TextMeshProUGUI winningPlayerText;
-    
-    [SerializeField] 
-    private CanvasGroup winningTextCanvasGroup;
-    
-    [SerializeField]
-    private Button retryButton;
-    
+
+    [SerializeField] public TextMeshProUGUI winningPlayerText;
+
+    [SerializeField] private CanvasGroup winningTextCanvasGroup;
+
+    [SerializeField] private Button retryButton;
+
     private bool gameStopped = false;
-    
+
     private bool isCameraMoving = false;
-    
+
     private bool isPlayer1Turn = true;
-    
+
     private int[,] board;
-    
+
     private GameObject fallingCoin;
 
     private string player1Name;
-    
+
     private string player2Name;
-    
+
+    private List<Vector3> player1Positions = new List<Vector3>();
+    private List<Vector3> player2Positions = new List<Vector3>();
+
+    private List<GameObject> winningCoins = new List<GameObject>();
+
     private void Start()
     {
         board = new int[BoardColumnNumbers, BoardRowNumbers];
@@ -85,13 +80,13 @@ public class GameManager : MonoBehaviour
         player2Preview.SetActive(false);
 
         SetCamera();
-        
+
         player1Name = GameData.Player1Name;
         player2Name = GameData.Player2Name;
 
         SetPlayerTurnText(true);
         SetPlayerNameColor(true);
-        
+
         winningPlayerText.gameObject.SetActive(false);
         retryButton.gameObject.SetActive(false);
     }
@@ -115,7 +110,7 @@ public class GameManager : MonoBehaviour
     private void SetPlayerNameColor(bool isPlayer1Turn)
     {
         if (playerNameTurnText == null) return;
-        
+
         Color targetColor = isPlayer1Turn ? Color.red : Color.blue;
         playerNameTurnText.DOColor(targetColor, 0.5f);
     }
@@ -133,17 +128,17 @@ public class GameManager : MonoBehaviour
     private void SetPlayerTurnNameAnimation()
     {
         if (playerNameTurnText == null) return;
-        
+
         playerNameTurnText.transform
             .DORotate(new Vector3(0, 0, 360), 1f, RotateMode.FastBeyond360)
             .SetEase(Ease.OutBounce);
-        
+
         playerNameTurnText.transform
             .DOScale(Vector3.one * 1.2f, 0.5f)
-            .SetLoops(2, LoopType.Yoyo)       
+            .SetLoops(2, LoopType.Yoyo)
             .SetEase(Ease.InOutQuad);
 
-        
+
         playerNameTurnText.DOFade(0, 0.3f)
             .SetLoops(2, LoopType.Yoyo)
             .SetEase(Ease.InOutSine);
@@ -162,10 +157,10 @@ public class GameManager : MonoBehaviour
     private void SetCamera()
     {
         isCameraMoving = true;
-        
+
         mainCamera.transform.position = StartPosition;
         mainCamera.transform.rotation = Quaternion.Euler(StartRotation);
-        
+
         mainCamera.transform.DOMove(TargetPosition, 1f).SetEase(Ease.InOutQuad);
         mainCamera.transform.DORotate(TargetRotation, 1f).SetEase(Ease.InOutQuad).OnComplete(() =>
         {
@@ -179,7 +174,7 @@ public class GameManager : MonoBehaviour
     public void OnHoverColumn(int columnIndex)
     {
         if (isCameraMoving || gameStopped) return;
-        
+
         if (IsColumnNotFull(columnIndex) && IsCoinStationary())
         {
             var previewToActivate = isPlayer1Turn ? player1Preview : player2Preview;
@@ -223,7 +218,7 @@ public class GameManager : MonoBehaviour
     public void SelectColumn(int columnIndex)
     {
         if (isCameraMoving || gameStopped) return;
-        
+
         if (IsCoinStationary())
         {
             TakeTurn(columnIndex);
@@ -274,18 +269,41 @@ public class GameManager : MonoBehaviour
 
         int playerId = isPlayer1Turn ? Player1Id : Player2Id;
 
+        StartCoroutine(WaitForStationaryCoin(fallingCoin, playerId));
+
         if (IsWin(playerId))
         {
             Debug.Log($"{playerId} has won!");
-            SeTWinningPlayerText(playerId);
+            SeWinningPlayerText(playerId);
+            AnimateWinningCoins(playerId);
         }
     }
 
-    private void SeTWinningPlayerText(int playerId)
+    private IEnumerator WaitForStationaryCoin(GameObject coin, int playerId)
+    {
+        Rigidbody rb = coin.GetComponent<Rigidbody>();
+        while (rb != null && rb.linearVelocity.magnitude > 0.01f)
+        {
+            yield return null;
+        }
+
+        if (playerId == Player1Id)
+        {
+            player1Positions.Add(coin.transform.position);
+        }
+        else if (playerId == Player2Id)
+        {
+            player2Positions.Add(coin.transform.position);
+        }
+
+        Debug.Log($"Coin position saved for Player {playerId}: {coin.transform.position}");
+    }
+
+    private void SeWinningPlayerText(int playerId)
     {
         winningPlayerText.gameObject.SetActive(true);
         winningPlayerText.color = Color.green;
-        
+
         if (playerId == Player1Id)
         {
             winningPlayerText.text = $"{player1Name} has won!";
@@ -294,11 +312,11 @@ public class GameManager : MonoBehaviour
         {
             winningPlayerText.text = $"{player2Name} has won!";
         }
-        
-        winningTextCanvasGroup.alpha = 0; 
+
+        winningTextCanvasGroup.alpha = 0;
         winningTextCanvasGroup.DOFade(1, 1f).SetEase(Ease.OutBounce);
 
-        winningPlayerText.transform.localScale = Vector3.zero; 
+        winningPlayerText.transform.localScale = Vector3.zero;
         winningPlayerText.transform.DOScale(Vector3.one, 1f)
             .SetEase(Ease.OutElastic)
             .OnComplete(() =>
@@ -306,10 +324,10 @@ public class GameManager : MonoBehaviour
                 winningPlayerText.transform.DOScale(new Vector3(1.1f, 1.1f, 1f), 0.5f)
                     .SetEase(Ease.InOutBounce)
                     .SetLoops(-1, LoopType.Yoyo);
-            }); 
-        
+            });
+
         retryButton.gameObject.SetActive(true);
-        
+
         playerNameTurnText.gameObject.SetActive(false);
         gameStopped = true;
     }
@@ -319,12 +337,12 @@ public class GameManager : MonoBehaviour
         winningPlayerText.gameObject.SetActive(true);
         winningPlayerText.color = Color.red;
         winningPlayerText.text = $"Is a Draw";
-        
-        
-        winningTextCanvasGroup.alpha = 0; 
+
+
+        winningTextCanvasGroup.alpha = 0;
         winningTextCanvasGroup.DOFade(1, 1f).SetEase(Ease.OutBounce);
 
-        winningPlayerText.transform.localScale = Vector3.zero; 
+        winningPlayerText.transform.localScale = Vector3.zero;
         winningPlayerText.transform.DOScale(Vector3.one, 1f)
             .SetEase(Ease.OutElastic)
             .OnComplete(() =>
@@ -332,13 +350,14 @@ public class GameManager : MonoBehaviour
                 winningPlayerText.transform.DOScale(new Vector3(1.1f, 1.1f, 1f), 0.5f)
                     .SetEase(Ease.InOutBounce)
                     .SetLoops(-1, LoopType.Yoyo);
-            }); 
-        
+            });
+
         retryButton.gameObject.SetActive(true);
-        
+
         playerNameTurnText.gameObject.SetActive(false);
         gameStopped = true;
     }
+
     public void ResumeGame()
     {
         DOTween.Kill(winningPlayerText, true);
@@ -390,6 +409,8 @@ public class GameManager : MonoBehaviour
     /// <returns>True if the player has achieved a winning condition, otherwise false.</returns>
     private bool IsWin(int playerId)
     {
+        winningCoins.Clear();
+
         // Horizontal
         for (int i = 0; i < BoardColumnNumbers - 3; i++)
         {
@@ -398,12 +419,13 @@ public class GameManager : MonoBehaviour
                 if (board[i, j] == playerId && board[i + 1, j] == playerId
                                             && board[i + 2, j] == playerId && board[i + 3, j] == playerId)
                 {
+                    AddWinningCoins(i, j, 1, 0);
                     return true;
                 }
             }
         }
 
-        // Vertical
+        // Vertikal
         for (int i = 0; i < BoardColumnNumbers; i++)
         {
             for (int j = 0; j < BoardRowNumbers - 3; j++)
@@ -411,6 +433,7 @@ public class GameManager : MonoBehaviour
                 if (board[i, j] == playerId && board[i, j + 1] == playerId
                                             && board[i, j + 2] == playerId && board[i, j + 3] == playerId)
                 {
+                    AddWinningCoins(i, j, 0, 1);
                     return true;
                 }
             }
@@ -424,6 +447,7 @@ public class GameManager : MonoBehaviour
                 if (board[i, j] == playerId && board[i + 1, j + 1] == playerId
                                             && board[i + 2, j + 2] == playerId && board[i + 3, j + 3] == playerId)
                 {
+                    AddWinningCoins(i, j, 1, 1);
                     return true;
                 }
             }
@@ -435,14 +459,106 @@ public class GameManager : MonoBehaviour
             for (int j = 0; j < BoardRowNumbers - 3; j++)
             {
                 if (board[i, j + 3] == playerId && board[i + 1, j + 2] == playerId
-                                            && board[i + 2, j + 1] == playerId && board[i + 3, j] == playerId)
+                                                && board[i + 2, j + 1] == playerId && board[i + 3, j] == playerId)
                 {
+                    AddWinningCoins(i, j + 3, 1, -1);
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    private void AddWinningCoins(int startX, int startY, int stepX, int stepY)
+    {
+        for (int k = 0; k < 4; k++)
+        {
+            var coin = FindCoinAt(startX + k * stepX, startY + k * stepY);
+            if (coin != null)
+            {
+                winningCoins.Add(coin);
+            }
+        }
+    }
+
+    private GameObject FindCoinAt(int columnIndex, int rowIndex)
+    {
+        foreach (var coin in FindObjectsOfType<Rigidbody>())
+        {
+            if (Vector3.Distance(coin.transform.position,
+                    spawnPositions[columnIndex].transform.position + Vector3.up * rowIndex) < 0.1f)
+            {
+                return coin.gameObject;
+            }
+        }
+
+        return null;
+    }
+
+    private void AnimateWinningCoins(int playerId)
+    {
+        if (winningCoins == null || winningCoins.Count == 0)
+        {
+            Debug.LogWarning($"Winning coins list is null or empty for Player {playerId}.");
+            return;
+        }
+
+        foreach (var coin in winningCoins)
+        {
+            if (coin == null)
+            {
+                Debug.LogWarning("One of the winning coins is null or has been destroyed.");
+                continue;
+            }
+
+            if (!coin.activeSelf)
+            {
+                Debug.LogWarning($"Coin '{coin.name}' is inactive and cannot be animated.");
+                continue;
+            }
+
+            var renderer = coin.GetComponent<Renderer>();
+            if (renderer == null)
+            {
+                Debug.LogWarning($"Coin '{coin.name}' does not have a Renderer component!");
+                continue;
+            }
+
+            Material mat = renderer.material;
+            if (mat == null)
+            {
+                Debug.LogWarning($"Renderer on coin '{coin.name}' has no valid Material assigned!");
+                continue;
+            }
+            
+            bool hasCoinMaterial1Color = mat.HasProperty("CoinMaterial1Color");
+            bool hasCoinMaterial2Color = mat.HasProperty("CoinMaterial2Color");
+
+            if (!hasCoinMaterial1Color && !hasCoinMaterial2Color)
+            {
+                Debug.LogWarning(
+                    $"Coin '{coin.name}' uses a Material without 'CoinMaterial1Color' or 'CoinMaterial2Color' properties!");
+                continue;
+            }
+
+
+            string colorProperty = hasCoinMaterial1Color ? "CoinMaterial1Color" : "CoinMaterial2Color";
+            Color color = mat.GetColor(colorProperty);
+
+            DOTween.To(() => color.a, alpha =>
+                {
+                    color.a = alpha;
+                    mat.SetColor(colorProperty, color);
+                }, 0f, 1f)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetAutoKill(true)
+                .OnKill(() =>
+                    Debug.Log($"Tween killed for material transparency on coin '{coin.name}' using {colorProperty}."));
+
+            Debug.Log(
+                $"Animating material transparency for coin '{coin.name}' using '{colorProperty}' for Player {playerId}.");
+        }
     }
 
     /// <summary>
@@ -460,6 +576,7 @@ public class GameManager : MonoBehaviour
                 return false;
             }
         }
+
         return true;
     }
 }
